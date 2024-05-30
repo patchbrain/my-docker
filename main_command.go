@@ -17,11 +17,11 @@ var runCommand = cli.Command{
 		},
 	},
 	Action: func(c *cli.Context) error {
-		log.Infof("into run command...")
+		log.Infof("into run command, args: %#v",c.Args())
 		if len(c.Args()) == 0 {
 			return fmt.Errorf("missing command")
 		}
-		cmd := c.Args().Get(0) // 获取要在容器中执行的命令
+		cmd := c.Args() // 获取要在容器中执行的命令
 		tty := c.Bool("it")    // 获取是否有-it这个参数
 		Run(tty, cmd)
 		return nil
@@ -33,12 +33,7 @@ var initCommand = cli.Command{
 	Usage: "init container. don't call it outside",
 	Action: func(c *cli.Context) error {
 		log.Infof("into init command...")
-		// 获取要执行的命令
-		cmd := c.Args().Get(0)
-		// 进行proc的挂载，并且通过syscall.exec执行命令，覆盖当前的进程
-		log.Infof("execing command: %s", cmd)
-		args := c.Args().Tail()
-		err := container.Initer(cmd,args)
+		err := container.Initer()
 		return err
 	},
 }
