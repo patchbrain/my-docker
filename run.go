@@ -3,11 +3,12 @@ package main
 import (
 	log "github.com/sirupsen/logrus"
 	"mydocker/container"
+	"mydocker/resource/config"
 	"os"
 	"strings"
 )
 
-func Run(tty bool, cmd []string) {
+func Run(tty bool, cmd []string, cfg config.Config) {
 	// 组装一个通过init包装cmd的命令
 	parent, wp := container.NewParentProcess(tty)
 	if err := parent.Start(); err != nil {
