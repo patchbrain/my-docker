@@ -25,22 +25,26 @@ func (t *MemSys) Apply() error {
 		return errors.New("empty group name")
 	}
 
-	writen := strconv.FormatInt(t.Cfg.Memory, 10)
+	if t.Cfg.Memory == nil{
+		return nil
+	}
+	
+	written := strconv.FormatInt(*t.Cfg.Memory, 10)
 	return cgroup.SetSpec(cgroup.CgroupOpCfg{
 		CgroupName: t.CgroupName,
 		SubSysName: t.Name(),
 		SpecName:   "memory.limit_in_bytes",
-		Value:      writen,
+		Value:      written,
 		AutoCreate: true,
 	})
 }
 
-func (t *MemSys) AddPid(pid int64) error {
+func (t *MemSys) AddPid(pid int) error {
 	if t.CgroupName == "" {
 		return errors.New("empty group name")
 	}
 
-	writen := strconv.FormatInt(pid, 10)
+	writen := strconv.Itoa(pid)
 	return cgroup.SetSpec(cgroup.CgroupOpCfg{
 		CgroupName: t.CgroupName,
 		SubSysName: t.Name(),

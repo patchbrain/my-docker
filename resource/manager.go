@@ -3,6 +3,7 @@ package resource
 import (
 	log "github.com/sirupsen/logrus"
 	"mydocker/resource/subsystem"
+	"os"
 	"sync"
 )
 
@@ -37,6 +38,19 @@ func (t *ResourceManager) Apply() {
 	}
 
 	return
+}
+
+func (t *ResourceManager) AddPids() error {
+	pid := os.Getpid()
+	for _, sub := range t.SubSysSet {
+		err := sub.AddPid(pid)
+		if err != nil {
+			log.Errorf("add pid(%d) failed: %s, name: %s", pid, err.Error(), sub.Name())
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (t *ResourceManager) Register(sub ...subsystem.System) *ResourceManager {

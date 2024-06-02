@@ -20,7 +20,9 @@ func Run(tty bool, cmd []string, cfg config.Config) {
 	// 进行Cgroup配置的应用
 	log.Infof("start to config CGroup..")
 	memSub := subsystem.NewMemSys(&cfg)
-	mgr := resource.MgrIns().Register(memSub)
+	cpuSub := subsystem.NewCpuSys(&cfg)
+	cpuSetSub := subsystem.NewCpuSetSys(&cfg)
+	mgr := resource.MgrIns().Register(memSub,cpuSub,cpuSetSub)
 	mgr.Apply()
 	defer func() {
 		err := mgr.Destroy()
