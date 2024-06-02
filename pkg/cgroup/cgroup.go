@@ -2,6 +2,8 @@ package cgroup
 
 import (
 	"errors"
+	"github.com/sirupsen/logrus"
+	"mydocker/tool"
 	"os"
 	"path/filepath"
 )
@@ -11,10 +13,11 @@ var SupTable = map[string]struct{}{
 	"cpu.cfs_quota_us":      {},
 	"cpu.cfs_period_us":     {},
 	"cpuset.cpus":           {},
+	"tasks":                 {},
 }
 
 func GetRootPath(subSysName string) string {
-	return "/sys/fs/cgroup"
+	return filepath.Join("/sys/fs/cgroup", subSysName)
 }
 
 type CgroupOpCfg struct {
@@ -22,6 +25,7 @@ type CgroupOpCfg struct {
 	SubSysName string
 	SpecName   string
 	Value      string
+	AutoCreate bool
 }
 
 func SetSpec(cfg CgroupOpCfg) error {
@@ -32,13 +36,27 @@ func SetSpec(cfg CgroupOpCfg) error {
 	root := GetRootPath(cfg.SubSysName)
 	path := filepath.Join(root, cfg.CgroupName, cfg.SpecName)
 
-	set(path, cfg.Value)
+	if cfg.AutoCreate {
+		err := tool.EnsureDirExists(path)
+		if err != nil {
+			return err
+		}
+	}
+
+	logrus.Infof("path: %s", path)
+	err := set(path, cfg.Value)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func Delete() {
-
+func Delete(cfg CgroupOpCfg) error {
+	root := GetRootPath(cfg.SubSysName)
+	path := filepath.Join(root, cfg.CgroupName)
+	logrus.Infof("delete path: %s",path)
+	return os.RemoveAll(path)
 }
 
 func set(path string, value string) error {

@@ -23,7 +23,7 @@ func MgrIns() *ResourceManager {
 }
 
 func (t *ResourceManager) Apply() {
-	if len(t.SubSysSet) == 0{
+	if len(t.SubSysSet) == 0 {
 		log.Errorf("no subsystems, please register subsystem first")
 		return
 	}
@@ -39,8 +39,20 @@ func (t *ResourceManager) Apply() {
 	return
 }
 
-func (t *ResourceManager) Register(sub... subsystem.System) {
+func (t *ResourceManager) Register(sub ...subsystem.System) *ResourceManager {
 	log.Infof("register subsystems: %#v", sub)
 	t.SubSysSet = append(t.SubSysSet, sub...)
-	return
+	return t
+}
+
+func (t *ResourceManager) Destroy() error {
+	for _, sub := range t.SubSysSet {
+		err := sub.Destroy()
+		if err != nil {
+			log.Errorf("destroy subsystem failed: %s, name: %s", err.Error(), sub.Name())
+			return err
+		}
+	}
+
+	return nil
 }

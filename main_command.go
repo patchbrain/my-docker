@@ -37,6 +37,7 @@ var runCommand = cli.Command{
 		cmd := c.Args() // 获取要在容器中执行的命令
 		tty := c.Bool("it")    // 获取是否有-it这个参数
 		rCfg := config.NewConfig(c)
+		rCfg.CgroupName = "my_docker_cg"
 		Run(tty, cmd, rCfg)
 		return nil
 	},

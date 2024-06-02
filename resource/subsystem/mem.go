@@ -8,13 +8,14 @@ import (
 )
 
 type MemSys struct {
-	Cfg *config.Config
+	Cfg        *config.Config
 	CgroupName string
 }
 
 func NewMemSys(cfg *config.Config) *MemSys {
 	var res MemSys
 	res.Cfg = cfg
+	res.CgroupName = cfg.CgroupName
 
 	return &res
 }
@@ -30,6 +31,7 @@ func (t *MemSys) Apply() error {
 		SubSysName: t.Name(),
 		SpecName:   "memory.limit_in_bytes",
 		Value:      writen,
+		AutoCreate: true,
 	})
 }
 
@@ -42,14 +44,17 @@ func (t *MemSys) AddPid(pid int64) error {
 	return cgroup.SetSpec(cgroup.CgroupOpCfg{
 		CgroupName: t.CgroupName,
 		SubSysName: t.Name(),
-		SpecName:   "task",
+		SpecName:   "tasks",
 		Value:      writen,
+		AutoCreate: true,
 	})
 }
 
-func (t *MemSys) Remove(pid int) error {
-	//TODO implement me
-	panic("implement me")
+func (t *MemSys) Destroy() error {
+	return cgroup.Delete(cgroup.CgroupOpCfg{
+		CgroupName: t.Cfg.CgroupName,
+		SubSysName: t.Name(),
+	})
 }
 
 func (t *MemSys) Name() string {

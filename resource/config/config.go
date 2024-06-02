@@ -7,9 +7,10 @@ import (
 )
 
 type Config struct {
-	Memory int64
-	Cpu    int64
-	CpuSet []string
+	Memory     int64
+	Cpu        int64
+	CpuSet     []string
+	CgroupName string
 }
 
 func NewConfig(c *cli.Context) Config {
@@ -18,6 +19,6 @@ func NewConfig(c *cli.Context) Config {
 	res.Cpu = c.Int64("cpu")
 	cpuSetStr := c.String("cpuset")
 	res.CpuSet = strings.Fields(cpuSetStr)
-	log.Infof("@NewConfig gen a config: %#v",res)
+	log.Infof("@NewConfig gen a config: %#v", res)
 	return res
 }
