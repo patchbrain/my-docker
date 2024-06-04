@@ -2,7 +2,7 @@ package resource
 
 import (
 	log "github.com/sirupsen/logrus"
-	"mydocker/resource/subsystem"
+	"mydocker/pkg/resource/subsystem"
 	"os"
 	"sync"
 )

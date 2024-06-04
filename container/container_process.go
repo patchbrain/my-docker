@@ -2,6 +2,7 @@ package container
 
 import (
 	log "github.com/sirupsen/logrus"
+	"mydocker/pkg/mount"
 	"os"
 	"os/exec"
 	"syscall"
@@ -13,9 +14,9 @@ const ROOTFS = "/root/busybox"
 // 也就是要执行mydocker init args... 命令
 // 打开tty就是把当前进程的输入输出定向到标准输入输出上
 func NewParentProcess(tty bool) (*exec.Cmd, *os.File) {
-	rp,wp,err := os.Pipe()
-	if err!=nil{
-		log.Errorf("create pipe failed: %s",err.Error())
+	rp, wp, err := os.Pipe()
+	if err != nil {
+		log.Errorf("create pipe failed: %s", err.Error())
 		return nil, nil
 	}
 
@@ -31,9 +32,17 @@ func NewParentProcess(tty bool) (*exec.Cmd, *os.File) {
 		resCmd.Stderr = os.Stderr
 	}
 
+	// 准备unionFS
+	ol := mount.NewOverlay("/mnt/mydocker","/root/busybox.tar")
+	err = ol.Mount()
+	if err != nil {
+		log.Infof("gen unionFS env failed: %s", err.Error())
+		os.Exit(-1)
+	}
+
 	// 将readPipe传给子进程
 	resCmd.ExtraFiles = []*os.File{rp}
-	resCmd.Dir = ROOTFS
+	resCmd.Dir = ol.MergePath // 确定rootfs路径
 
-	return resCmd,wp
+	return resCmd, wp
 }

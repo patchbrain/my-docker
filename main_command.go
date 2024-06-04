@@ -5,7 +5,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"mydocker/container"
-	"mydocker/resource/config"
+	"mydocker/pkg/resource/config"
 )
 
 var runCommand = cli.Command{

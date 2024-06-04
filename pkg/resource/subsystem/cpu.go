@@ -3,7 +3,7 @@ package subsystem
 import (
 	"errors"
 	"mydocker/pkg/cgroup"
-	"mydocker/resource/config"
+	"mydocker/pkg/resource/config"
 	"strconv"
 	"strings"
 )

@@ -3,9 +3,9 @@ package main
 import (
 	log "github.com/sirupsen/logrus"
 	"mydocker/container"
-	"mydocker/resource"
-	"mydocker/resource/config"
-	"mydocker/resource/subsystem"
+	"mydocker/pkg/resource"
+	"mydocker/pkg/resource/config"
+	subsystem2 "mydocker/pkg/resource/subsystem"
 	"os"
 	"strings"
 )
@@ -19,13 +19,13 @@ func Run(tty bool, cmd []string, cfg config.Config) {
 
 	// 进行Cgroup配置的应用
 	log.Infof("start to config CGroup..")
-	memSub := subsystem.NewMemSys(&cfg)
-	cpuSub := subsystem.NewCpuSys(&cfg)
-	cpuSetSub := subsystem.NewCpuSetSys(&cfg)
-	mgr := resource.MgrIns().Register(memSub,cpuSub,cpuSetSub)
-	mgr.Apply()
+	memSub := subsystem2.NewMemSys(&cfg)
+	cpuSub := subsystem2.NewCpuSys(&cfg)
+	cpuSetSub := subsystem2.NewCpuSetSys(&cfg)
+	resourceMgr := resource.MgrIns().Register(memSub,cpuSub,cpuSetSub)
+	resourceMgr.Apply()
 	defer func() {
-		err := mgr.Destroy()
+		err := resourceMgr.Destroy()
 		if err != nil {
 			log.Errorf("destroy cgroup failed: %s", err.Error())
 		}
