@@ -12,7 +12,7 @@ import (
 
 func Run(tty bool, cmd []string, cfg config.Config) {
 	// 组装一个通过init包装cmd的命令
-	parent, wp := container.NewParentProcess(tty)
+	parent, wp, ol := container.NewParentProcess(tty)
 	if err := parent.Start(); err != nil {
 		log.Errorf("@Run parent cmd failed: %s", err.Error())
 	}
@@ -28,6 +28,11 @@ func Run(tty bool, cmd []string, cfg config.Config) {
 		err := resourceMgr.Destroy()
 		if err != nil {
 			log.Errorf("destroy cgroup failed: %s", err.Error())
+		}
+
+		err = ol.UnMount()
+		if err != nil {
+			log.Errorf("unmount failed: %s", err.Error())
 		}
 	}()
 

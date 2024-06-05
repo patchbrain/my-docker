@@ -16,7 +16,7 @@ type Overlay struct {
 	MergePath    string
 }
 
-func NewOverlay(rootMnt string, tarPath string) *Overlay {
+func NewOverlay(rootMnt string, tarPath string) Mounter {
 	return &Overlay{
 		LowerTarPath: tarPath,
 		LowerPath:    filepath.Join(rootMnt, "lower"),
@@ -29,28 +29,28 @@ func NewOverlay(rootMnt string, tarPath string) *Overlay {
 func (t *Overlay) Mount() error {
 	// 准备overlay各层的文件夹
 	err := t.MkRelaDir()
-	if err!=nil{
-		return errors.Wrap(err,"make relative dirs error")
+	if err != nil {
+		return errors.Wrap(err, "make relative dirs error")
 	}
 
 	// 执行mount命令
 	err = t.execMount()
-	if err!=nil{
-		return errors.Wrap(err,"run mount cmd error")
+	if err != nil {
+		return errors.Wrap(err, "run mount cmd error")
 	}
 
 	return nil
 }
 
 func (t *Overlay) UnMount() error {
-	err := t.removeAll()
-	if err!=nil{
-		return errors.Wrap(err,"remove all relative dirs error")
+	err := t.execUmount()
+	if err != nil {
+		return errors.Wrap(err, "run umount cmd error")
 	}
 
-	err = t.execUmount()
-	if err!=nil{
-		return errors.Wrap(err,"run umount cmd error")
+	err = t.removeAll()
+	if err != nil {
+		return errors.Wrap(err, "remove relative dirs error")
 	}
 
 	return nil
@@ -124,10 +124,22 @@ func (t *Overlay) makeLowerTier() error {
 
 // 清除所有相关目录
 func (t *Overlay) removeAll() error {
+	for _, path := range []string{t.WorkPath, t.UpperPath, t.LowerPath, t.MergePath} {
+		err := os.RemoveAll(path)
+		if err != nil {
+			return err
+		}
+	}
 
+	return nil
 }
 
 // 执行umount，接触挂载
 func (t *Overlay) execUmount() error {
+	cmd := exec.Command("umount", t.MergePath)
+	if err := cmd.Run(); err != nil {
+		return err
+	}
 
+	return nil
 }
