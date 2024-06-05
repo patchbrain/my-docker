@@ -10,9 +10,9 @@ import (
 	"strings"
 )
 
-func Run(tty bool, cmd []string, cfg config.Config) {
+func Run(tty bool, cmd []string, cfg config.Config, volStr string) {
 	// 组装一个通过init包装cmd的命令
-	parent, wp, ol := container.NewParentProcess(tty)
+	parent, wp, ol := container.NewParentProcess(tty, volStr)
 	if err := parent.Start(); err != nil {
 		log.Errorf("@Run parent cmd failed: %s", err.Error())
 	}

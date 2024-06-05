@@ -28,6 +28,10 @@ var runCommand = cli.Command{
 			Name: "cpuset",
 			Usage: "cpu set, eg. -cpuset 2,3,4",
 		},
+		cli.StringFlag{
+			Name: "v",
+			Usage: "volume, eg. -v host/source/path:container/dst/path",
+		},
 	},
 	Action: func(c *cli.Context) error {
 		log.Infof("into run command, args: %#v",c.Args())
@@ -36,9 +40,10 @@ var runCommand = cli.Command{
 		}
 		cmd := c.Args() // 获取要在容器中执行的命令
 		tty := c.Bool("it")    // 获取是否有-it这个参数
+		volStr := c.String("v")
 		rCfg := config.NewConfig(c)
 		rCfg.CgroupName = "my_docker_cg"
-		Run(tty, cmd, rCfg)
+		Run(tty, cmd, rCfg, volStr)
 		return nil
 	},
 }
