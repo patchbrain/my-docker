@@ -13,6 +13,10 @@ import (
 func Run(tty bool, cmd []string, cfg config.Config, volStr string) {
 	// 组装一个通过init包装cmd的命令
 	parent, wp, ol := container.NewParentProcess(tty, volStr)
+	if parent == nil{
+		log.Errorf("@Run gen parent cmd error")
+		return
+	}
 	if err := parent.Start(); err != nil {
 		log.Errorf("@Run parent cmd failed: %s", err.Error())
 	}

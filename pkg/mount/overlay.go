@@ -31,7 +31,7 @@ func NewOverlay(rootMnt, tarPath string, vol Volume) Mounter {
 
 func (t *Overlay) Mount() error {
 	// 准备overlay各层的文件夹
-	err := t.MkRelaDir()
+	err := t.MkOverlayDir()
 	if err != nil {
 		return errors.Wrap(err, "make relative dirs error")
 	}
@@ -59,7 +59,7 @@ func (t *Overlay) UnMount() error {
 	return nil
 }
 
-func (t *Overlay) MkRelaDir() error {
+func (t *Overlay) MkOverlayDir() error {
 	var err error
 	err = t.makeLowerTier()
 	if err != nil {
@@ -84,14 +84,6 @@ func (t *Overlay) MkRelaDir() error {
 		return errors.Wrap(err, "make merge tier error")
 	}
 
-	// 如果有volume的话，创建挂载点的目录
-	if t.Volume.Src != "" {
-		err = os.MkdirAll(t.Volume.Dst, 0777)
-		if err != nil {
-			return errors.Wrap(err, "make volume dst dir error")
-		}
-	}
-
 	return nil
 }
 
@@ -111,12 +103,21 @@ func (t *Overlay) execMount() error {
 	}
 
 	if t.Volume.Src != "" {
+		targetDir := filepath.Join(t.MergePath, t.Volume.Dst)
+		log.Infof("bind target dir: %s", targetDir)
+		err = os.MkdirAll(targetDir, 0777)
+		if err != nil {
+			return errors.Wrap(err, "make volume dst dir error")
+		}
+
 		cmd2 := exec.Command("mount", []string{
 			"-o",
 			"bind",
 			t.Volume.Src,
-			filepath.Join(t.MergePath, t.Volume.Dst),
+			targetDir,
 		}...)
+		cmd2.Stdout = os.Stdout
+		cmd2.Stderr = os.Stderr
 		if err = cmd2.Run(); err != nil {
 			return errors.Wrap(err, "mount bind error")
 		}
@@ -160,16 +161,22 @@ func (t *Overlay) removeAll() error {
 
 // 执行umount，接触挂载
 func (t *Overlay) execUmount() error {
-	cmd1 := exec.Command("umount", t.MergePath)
-	if err := cmd1.Run(); err != nil {
-		return err
-	}
-
 	if t.Volume.Src != "" {
-		cmd2 := exec.Command("umount", filepath.Join(t.MergePath, t.Volume.Dst))
-		if err := cmd2.Run(); err != nil {
+		cmd1 := exec.Command("umount", filepath.Join(t.MergePath, t.Volume.Dst))
+		cmd1.Stdout = os.Stdout
+		cmd1.Stderr = os.Stderr
+
+		if err := cmd1.Run(); err != nil {
 			return err
 		}
+	}
+
+	cmd2 := exec.Command("umount", t.MergePath)
+	cmd2.Stdout = os.Stdout
+	cmd2.Stderr = os.Stderr
+
+	if err := cmd2.Run(); err != nil {
+		return err
 	}
 
 	return nil

@@ -46,7 +46,7 @@ func NewParentProcess(tty bool, volStr string) (*exec.Cmd, *os.File, mount.Mount
 	err = ol.Mount()
 	if err != nil {
 		log.Infof("gen unionFS env failed: %s", err.Error())
-		os.Exit(-1)
+		return nil, nil, nil
 	}
 
 	// 将readPipe传给子进程
