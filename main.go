@@ -14,7 +14,7 @@ func main() {
 	app.Name = "mydocker"
 	app.Usage = `simple docker`
 
-	app.Commands = []cli.Command{runCommand,initCommand,commitCommand}
+	app.Commands = []cli.Command{runCommand,initCommand}
 
 	app.Before = func(c *cli.Context) error {
 		log.SetFormatter(&log.JSONFormatter{

@@ -2,7 +2,6 @@ package container
 
 import (
 	log "github.com/sirupsen/logrus"
-	"mydocker/config"
 	"mydocker/pkg/mount"
 	"os"
 	"os/exec"
@@ -43,7 +42,7 @@ func NewParentProcess(tty bool, volStr string) (*exec.Cmd, *os.File, mount.Mount
 		}
 	}
 
-	ol := mount.NewOverlay(config.MntPath, "/root/busybox.tar", vol)
+	ol := mount.NewOverlay("/mnt/mydocker", "/root/busybox.tar", vol)
 	err = ol.Mount()
 	if err != nil {
 		log.Infof("gen unionFS env failed: %s", err.Error())
