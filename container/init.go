@@ -33,6 +33,8 @@ func Initer() error {
 
 	// 用用户给的命令来替换当前的进程
 	log.Infof("@Initer args: %#v", args)
+
+	// syscall.Exec会直接替换当前golang程序，该程序之后的代码将不会执行
 	err = syscall.Exec(path, args, os.Environ())
 	if err != nil {
 		log.Errorf("@ContainerIniter syscall.exec command failed: %s", err.Error())

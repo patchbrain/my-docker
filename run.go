@@ -5,7 +5,7 @@ import (
 	"mydocker/container"
 	"mydocker/pkg/resource"
 	"mydocker/pkg/resource/config"
-	subsystem2 "mydocker/pkg/resource/subsystem"
+	"mydocker/pkg/resource/subsystem"
 	"os"
 	"strings"
 )
@@ -13,7 +13,7 @@ import (
 func Run(tty bool, cmd []string, cfg config.Config, volStr string) {
 	// 组装一个通过init包装cmd的命令
 	parent, wp, ol := container.NewParentProcess(tty, volStr)
-	if parent == nil{
+	if parent == nil {
 		log.Errorf("@Run gen parent cmd error")
 		return
 	}
@@ -23,22 +23,27 @@ func Run(tty bool, cmd []string, cfg config.Config, volStr string) {
 
 	// 进行Cgroup配置的应用
 	log.Infof("start to config CGroup..")
-	memSub := subsystem2.NewMemSys(&cfg)
-	cpuSub := subsystem2.NewCpuSys(&cfg)
-	cpuSetSub := subsystem2.NewCpuSetSys(&cfg)
-	resourceMgr := resource.MgrIns().Register(memSub,cpuSub,cpuSetSub)
+	memSub := subsystem.NewMemSys(&cfg)
+	cpuSub := subsystem.NewCpuSys(&cfg)
+	cpuSetSub := subsystem.NewCpuSetSys(&cfg)
+	resourceMgr := resource.MgrIns().Register(memSub, cpuSub, cpuSetSub)
 	resourceMgr.Apply()
-	defer func() {
+
+	container.SetEndFn(func() error {
 		err := resourceMgr.Destroy()
 		if err != nil {
 			log.Errorf("destroy cgroup failed: %s", err.Error())
+			return err
 		}
 
 		err = ol.UnMount()
 		if err != nil {
 			log.Errorf("unmount failed: %s", err.Error())
+			return err
 		}
-	}()
+
+		return nil
+	})
 
 	// 将命令从writePipe中发送
 	err := writeArgs2Pipe(wp, cmd)
@@ -46,8 +51,15 @@ func Run(tty bool, cmd []string, cfg config.Config, volStr string) {
 		log.Errorf("@Run write args 2 pipe failed: %s, cmd: %#v", err.Error(), cmd)
 	}
 
-	if err := parent.Wait(); err != nil {
-		log.Errorf("@Run parent wait failed: %s", err.Error())
+	if tty{
+		if err := parent.Wait(); err != nil {
+			log.Errorf("@Run parent wait failed: %s", err.Error())
+		}
+
+		err = container.EndFn()
+		if err!=nil{
+			log.Errorf("@Run run end func failed: %s", err.Error())
+		}
 	}
 }
 

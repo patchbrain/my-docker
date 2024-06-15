@@ -31,6 +31,14 @@ func NewParentProcess(tty bool, volStr string) (*exec.Cmd, *os.File, mount.Mount
 		resCmd.Stdout = os.Stdout
 		resCmd.Stdin = os.Stdin
 		resCmd.Stderr = os.Stderr
+	}else{
+		f,err := os.OpenFile("out.txt",os.O_RDWR|os.O_CREATE,0666)
+		if err != nil {
+			log.Errorf("open log file failed: %s", err.Error())
+		}
+
+		resCmd.Stdout = f
+		resCmd.Stderr = f
 	}
 
 	// 准备unionFS

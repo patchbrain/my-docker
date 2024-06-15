@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -18,6 +19,10 @@ var runCommand = cli.Command{
 		cli.BoolFlag{
 			Name:  "it",
 			Usage: "enable tty",
+		},
+		cli.BoolFlag{
+			Name:  "d",
+			Usage: "detach",
 		},
 		cli.Int64Flag{
 			Name:  "mem",
@@ -43,7 +48,13 @@ var runCommand = cli.Command{
 		}
 		cmd := c.Args()     // 获取要在容器中执行的命令
 		tty := c.Bool("it") // 获取是否有-it这个参数
+		detach := c.Bool("d") // 容器是否在后台运行
 		volStr := c.String("v")
+
+		if tty && detach{
+			return errors.New("has tty and detach option meanwhile")
+		}
+
 		rCfg := config.NewConfig(c)
 		rCfg.CgroupName = "my_docker_cg"
 		Run(tty, cmd, rCfg, volStr)
@@ -57,7 +68,11 @@ var initCommand = cli.Command{
 	Action: func(c *cli.Context) error {
 		log.Infof("into init command...")
 		err := container.Initer()
-		return err
+		if err!=nil{
+			return err
+		}
+
+		return nil
 	},
 }
 
